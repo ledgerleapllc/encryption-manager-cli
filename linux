@@ -1,0 +1,127 @@
+# Copy this contents to .profile, .bashrc, .zshenv, or anything else in your path you source, depending on your os
+
+# Use this copy if you're using a linux distro
+
+function encrypt_creds() {
+    if [ -f ~/creds.ods ]; then
+        openssl enc -aes-256-cbc -pbkdf2 -a -salt -in ~/creds.ods -out ~/creds.ods.enc && shred -vzfun7 ~/creds.ods
+    fi
+    ls -la ~/ | grep 'creds'
+}
+
+function decrypt_creds() {
+    if [ -f ~/creds.ods.enc ]; then
+        openssl enc -d -aes-256-cbc -pbkdf2 -a -in ~/creds.ods.enc -out ~/creds.ods && rm ~/creds.ods.enc
+    fi
+    if [ -f ~/creds.ods ]; then
+        libreoffice ~/creds.ods
+    fi
+}
+
+function encrypt_wallet() {
+    if [ -f ~/FB371-KEYPAIR ]; then
+        openssl enc -aes-256-cbc -pbkdf2 -a -salt -in ~/FB371-KEYPAIR -out ~/FB371-KEYPAIR.enc && shred -vzfun 7 ~/FB371-KEYPAIR
+    fi
+    ls -la ~/ | grep 'FB371'
+}
+
+function decrypt_wallet() {
+    if [ -f ~/FB371-KEYPAIR.enc ]; then
+        openssl enc -d -aes-256-cbc -pbkdf2 -a -in ~/FB371-KEYPAIR.enc -out ~/FB371-KEYPAIR && rm ~/FB371-KEYPAIR.enc
+    fi
+    if [ -f ~/FB371-KEYPAIR ]; then
+        cat ~/FB371-KEYPAIR
+    fi
+}
+
+function encrypt_beamdata() {
+    tar -cf ~/beamdata.tar ~/beamdata && openssl enc -aes-256-cbc -pbkdf2 -a -salt -in ~/beamdata.tar -out ~/beamdata.tar.enc && shred -vzfun 7 ~/beamdata.tar && rm -r ~/beamdata
+}
+
+function decrypt_beamdata() {
+    if [ -f ~/beamdata.tar.enc ]; then
+        openssl enc -d -aes-256-cbc -pbkdf2 -a -in ~/beamdata.tar.enc -out ~/beamdata.tar && tar -xf ~/beamdata.tar && rm ~/beamdata.tar.enc && shred -vzfun7 ~/beamdata.tar
+    fi
+    ls -la ~/beamdata/
+}
+
+function encrypt_node5() {
+    if [ -f ~/NODE5.pem ]; then
+        openssl enc -aes-256-cbc -pbkdf2 -a -salt -in ~/NODE5.pem -out ~/NODE5.pem.enc && shred -vzfun 7 ~/NODE5.pem
+    fi
+    ls -la ~/ | grep 'NODE5'
+}
+
+function decrypt_node5() {
+    if [ -f ~/NODE5.pem.enc ]; then
+        openssl enc -d -aes-256-cbc -pbkdf2 -a -in ~/NODE5.pem.enc -out ~/NODE5.pem && rm ~/NODE5.pem.enc
+    fi
+    ls -la ~/ | grep 'NODE5'
+}
+
+function encrypt_this() {
+    arg_one="$(echo $1 | sed 's/\///g')"
+    tar -cf $arg_one.tar $arg_one && openssl enc -aes-256-cbc -pbkdf2 -a -salt -in $arg_one.tar -out $arg_one.tar.enc && shred -vzfun7 $arg_one.tar && if [ -d $arg_one ]; then find $arg_one -type f -exec shred -vzfun7 {} \; && rm -r $arg_one; else shred -vzfun7 $arg_one; fi;
+}
+
+function decrypt_this() {
+    openssl enc -d -aes-256-cbc -pbkdf2 -a -in $1 -out $(printf $1 | sed 's/.enc//g') && tar -xf $(printf $1 | sed 's/.enc//g') && shred -vzfun7 $(printf $1 | sed 's/.enc//g') && rm $1
+}
+
+function encrypt_status() {
+    echo
+    echo "OpenSSL AES-256-CBC"
+    echo "Sensitive Local Files Encryption Status"
+    echo
+    printf " [+] Beam Data:     " 
+
+    if [ -d ~/beamdata ]; then
+        echo -e "\033[0;31mUnencrypted\033[0m"
+    elif [ -f ~/beamdata.tar.enc ]; then
+        echo -e "\033[1;32mEncrypted\033[0m"
+    else
+        echo -e "\033[1;33mNot Found\033[0m"
+    fi
+
+    printf " [+] Credentials:   " 
+
+    if [ -f ~/creds.ods ]; then
+        echo -e "\033[0;31mUnencrypted\033[0m"
+    elif [ -f ~/creds.ods.enc ]; then
+        echo -e "\033[1;32mEncrypted\033[0m"
+    else
+        echo -e "\033[1;33mNot Found\033[0m"
+    fi
+
+    printf " [+] Crypto Wallet: " 
+
+    if [ -f ~/FB371-KEYPAIR ]; then
+        echo -e "\033[0;31mUnencrypted\033[0m"
+    elif [ -f ~/FB371-KEYPAIR.enc ]; then
+        echo -e "\033[1;32mEncrypted\033[0m"
+    else
+        echo -e "\033[1;33mNot Found\033[0m"
+    fi
+
+    printf " [+] NODE5 PEM Key: " 
+
+    if [ -f ~/NODE5.pem ]; then
+        echo -e "\033[0;31mUnencrypted\033[0m"
+    elif [ -f ~/NODE5.pem.enc ]; then
+        echo -e "\033[1;32mEncrypted\033[0m"
+    else
+        echo -e "\033[1;33mNot Found\033[0m"
+    fi
+
+    printf " [+] TOTP Keys:     " 
+
+    if [ -f ~/totp-keys.json ]; then
+        echo -e "\033[0;31mUnencrypted\033[0m"
+    elif [ -f ~/totp-keys.json.enc ]; then
+        echo -e "\033[1;32mEncrypted\033[0m"
+    else
+        echo -e "\033[1;33mNot Found\033[0m"
+    fi
+
+    echo
+}
